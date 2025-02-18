@@ -2,39 +2,34 @@ import os
 import logging
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
 # 📌 Cargar variables de entorno
 load_dotenv()
-
-# 📌 Obtener el token del bot desde el archivo .env
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
-# 📌 Configurar el sistema de logs
+# 📌 Configurar logs
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-# 📌 Función de inicio del bot
-def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text("¡Hola! Soy tu bot de Telegram en Railway. 🚀")
+# 📌 Función para manejar /start
+async def start(update: Update, context: CallbackContext) -> None:
+    await update.message.reply_text("¡Hola! Soy tu bot de Telegram en Railway. 🚀")
 
 # 📌 Función para manejar mensajes de texto
-def echo(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text(f"Recibí tu mensaje: {update.message.text}")
+async def echo(update: Update, context: CallbackContext) -> None:
+    await update.message.reply_text(f"Recibí tu mensaje: {update.message.text}")
 
+# 📌 Función principal
 def main():
-    # 📌 Configurar el bot con el token
-    updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
+    # ✅ Cambiar Updater por Application.builder()
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    # 📌 Obtener el dispatcher
-    dp = updater.dispatcher
-
-    # 📌 Agregar comandos al bot
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("echo", echo))
+    # 📌 Agregar comandos
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # 📌 Iniciar el bot
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
